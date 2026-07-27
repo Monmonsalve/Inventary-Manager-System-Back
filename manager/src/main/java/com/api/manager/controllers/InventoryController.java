@@ -49,7 +49,7 @@ public class InventoryController {
     public String deleteInventoryById(@PathVariable("id")Long id){
         boolean ok = this.inventoryService.deleteInvetoryById(id);
         if(ok){
-            return "Role Inventory with id: "+ id;
+            return "Inventory deleted with id: "+ id;
         }else{
             return "Could not delete Inventory with id: "+ id;
         }

@@ -38,9 +38,20 @@ public class ProductService {
         product.setStock(request.getStock());
         product.setDescription(request.getDescription());
         product.setCategory(request.getCategory());
+        product.setPrice(request.getPrice());
+        product.setSupplier(request.getSupplier());
 
         return productRepository.save(product);
     }
 
+    //Delete product
+    public boolean deleteProductById(Long id){
+        try{
+            productRepository.deleteById(id);
+            return true;
+        }catch(Exception e){
+            return false;
+        }
+    } 
 
 }
