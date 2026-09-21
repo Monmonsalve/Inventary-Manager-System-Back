@@ -216,6 +216,51 @@ This starts:
 - Java 17
 - MySQL 8
 
+Configure application.yml
+
+Before starting the project, open:
+
+src/main/resources/application.yml
+
+Update the MySQL username, password and JWT secret according to your local environment:
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: manager
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/inventory_manager?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: "YOUR_MYSQL_PASSWORD"
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+jwt:
+  secret: "YOUR_JWT_SECRET_WITH_AT_LEAST_32_CHARACTERS"
+  expiration: 3600000
+
+app:
+  bootstrap-admin:
+    email: ""
+    password: ""
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+The database can be created automatically when the configured MySQL user has the required permissions. The JWT secret must contain at least 32 characters.
+
 Configure these environment variables:
 
 | Variable | Description | Example |
