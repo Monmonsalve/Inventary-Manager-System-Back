@@ -1,273 +1,173 @@
-# Inventory Manager System - Backend
+# Inventory Management API
 
-REST API for managing products, categories, inventory, sales, users, roles and authentication.
+[![CI](https://github.com/Monmonsalve/Inventary-Manager-System-Back/actions/workflows/ci.yml/badge.svg)](https://github.com/Monmonsalve/Inventary-Manager-System-Back/actions/workflows/ci.yml)
+[![Java](https://img.shields.io/badge/Java-17-ED8B00.svg)](https://openjdk.org/projects/jdk/17/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F.svg)](https://spring.io/projects/spring-boot)
 
-## 🚀 Technologies
+Secure REST API for managing products, inventory by store, purchases and sales. It uses JWT authentication, role-based authorization and transactional stock updates.
 
-| Technology          | Description                      |
-| ------------------- | -------------------------------- |
-| ☕ Java 17           | Programming language             |
-| 🌱 Spring Boot      | Backend framework                |
-| 🗄️ Spring Data JPA | Data persistence                 |
-| 🔄 Hibernate        | ORM                              |
-| 🔐 Spring Security  | Authentication and authorization |
-| 🎫 JWT              | Token-based authentication       |
-| 🐬 MySQL            | Relational database              |
-| 📦 Maven            | Dependency management            |
+## Highlights
 
-## 📋 Description
+- JWT authentication with BCrypt password hashing.
+- Role-based access control: user and role administration is restricted to ADMIN.
+- Registration always assigns the USER role on the server.
+- DTOs prevent password hashes from being exposed through the API.
+- Purchases increase stock and sales reduce stock in one database transaction.
+- Stock is stored only in Inventory for each product/store pair.
+- Consistent validation and JSON error responses.
+- OpenAPI/Swagger documentation.
+- Unit tests, Docker Compose and GitHub Actions CI.
 
-**Inventory Manager System** is a backend REST API designed to help businesses manage their inventory and sales operations.
+## Stack
 
-The system provides endpoints for managing products, categories, suppliers, inventory, sales, users and roles.
+- Java 17
+- Spring Boot, Spring MVC and Spring Data JPA
+- Spring Security and JWT
+- MySQL 8
+- Maven
+- JUnit 5 and Mockito
+- Docker
 
-It also implements secure authentication using **Spring Security and JWT**, allowing protected endpoints to be accessed only by authenticated users.
+## Run with Docker
 
-## ✨ Features
+1. Copy the environment template:
 
-* 👤 User management
-* 🔐 Authentication using JWT
-* 🎫 JWT token generation and validation
-* 🛡️ Protected API endpoints
-* 👥 Role management
-* 📦 Product management
-* 🏷️ Category management
-* 🏪 Store management
-* 📊 Inventory management
-* 🛒 Sales management
-* 🧾 Sale details management
-* 🗄️ MySQL database integration
-* 🔄 Automatic database schema updates with Hibernate
+~~~bash
+cp .env.example .env
+~~~
 
-## 🔐 Authentication
+2. Replace the example passwords and JWT secret in .env. ADMIN_EMAIL and ADMIN_PASSWORD create the initial administrator only when that email does not exist.
 
-The application uses **Spring Security and JSON Web Tokens (JWT)** for authentication.
+3. Start the API and MySQL:
 
-### Authentication flow
+~~~bash
+docker compose up --build
+~~~
 
-```text
-Client
-   │
-   │ POST /auth/login
-   │ Email + Password
-   ▼
-Authentication Service
-   │
-   │ Verify credentials
-   ▼
-Spring Security
-   │
-   │ Generate JWT
-   ▼
-Client
-   │
-   │ Authorization: Bearer <token>
-   ▼
-JWT Authentication Filter
-   │
-   │ Validate token
-   ▼
-Protected Endpoint
-```
+The API runs at http://localhost:8080. Swagger UI is available at http://localhost:8080/swagger-ui.html.
 
-The authentication system includes:
+## Run locally
 
-* Secure password verification using `BCryptPasswordEncoder`.
-* JWT token generation after successful login.
-* JWT token validation on protected requests.
-* Authentication through the `Authorization` header.
-* Protected endpoints using Spring Security.
-* Automatic rejection of requests with invalid or expired tokens.
+Requirements: Java 17 and MySQL 8.
 
-### Example request
-
-Login:
-
-```http
-POST /auth/login
-Content-Type: application/json
-```
-
-```json
-{
-  "email": "user@example.com",
-  "password": "password"
-}
-```
-
-After successful authentication, the API returns a JWT token that can be used to access protected endpoints.
-
-```http
-Authorization: Bearer <your-jwt-token>
-```
-
-## 🗃️ Database Model
-
-The system currently includes the following main entities:
-
-```text
-User
- │
- └── Role
-
-Product
- ├── Category
- └── Supplier
-
-Store
- │
- └── Inventory
-       └── Product
-
-Sale
- └── Sale Details
-       └── Product
-```
-
-### Main entities
-
-* **User** — Application users and their credentials.
-* **Role** — User roles and permissions.
-* **Product** — Products available in the inventory.
-* **Category** — Product categorization.
-* **Supplier** — Product suppliers.
-* **Store** — Stores managed by the system.
-* **Inventory** — Product stock by store.
-* **Sale** — Registered sales transactions.
-* **Sale Details** — Products and quantities associated with each sale.
-
-## ⚙️ Configuration
-
-Create or update the `application.properties` file with your database configuration.
-
-Example:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/inventory_manager
-spring.datasource.username=root
-spring.datasource.password=your_password
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-```
-
-### JWT configuration
-
-The JWT secret and expiration time should also be configured in `application.properties`.
-
-```properties
-jwt.secret=your_secret_key
-jwt.expiration=86400000
-```
-
-> ⚠️ For production environments, avoid storing sensitive credentials directly in `application.properties`. Use environment variables or a secure secrets management solution.
-
-## ▶️ Running the Project
-
-### 1. Clone the repository
-
-```bash
+~~~bash
 git clone https://github.com/Monmonsalve/Inventary-Manager-System-Back.git
-```
-
-### 2. Navigate to the project
-
-```bash
 cd Inventary-Manager-System-Back
-```
+~~~
 
-### 3. Configure the database
+Configure environment variables:
 
-Create a MySQL database and configure the connection in `application.properties`.
+~~~bash
+export DB_URL='jdbc:mysql://localhost:3306/inventory_manager?createDatabaseIfNotExist=true&serverTimezone=UTC'
+export DB_USERNAME='root'
+export DB_PASSWORD='your-password'
+export JWT_SECRET='replace-with-a-random-secret-of-at-least-32-characters'
+~~~
 
-### 4. Run the application
+Then run:
 
-Using Maven:
-
-```bash
+~~~bash
 ./mvnw spring-boot:run
-```
+~~~
 
 On Windows:
 
-```bash
-mvnw.cmd spring-boot:run
-```
+~~~powershell
+./mvnw.cmd spring-boot:run
+~~~
 
-The API will be available at:
+## Authentication
 
-```text
-http://localhost:8080
-```
+Register:
 
-## 📁 Project Structure
+~~~http
+POST /auth/register
+Content-Type: application/json
+~~~
 
-```text
+~~~json
+{
+  "firstName": "Isaac",
+  "lastName": "Monsalve",
+  "email": "isaac@example.com",
+  "password": "strong-password"
+}
+~~~
+
+Login:
+
+~~~http
+POST /auth/login
+Content-Type: application/json
+~~~
+
+~~~json
+{
+  "email": "isaac@example.com",
+  "password": "strong-password"
+}
+~~~
+
+Use the returned token on protected requests:
+
+~~~http
+Authorization: Bearer <token>
+~~~
+
+## Main endpoints
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| POST | /auth/register | Public | Register a user with role USER |
+| POST | /auth/login | Public | Obtain a JWT |
+| GET/PUT/DELETE | /users/** | ADMIN | Manage users |
+| GET/POST/DELETE | /role/** | ADMIN | Manage roles |
+| GET/POST/PUT/DELETE | /products/** | Authenticated | Manage products |
+| GET/POST/PUT/DELETE | /inventory/** | Authenticated | Manage stock by store |
+| GET/POST/PUT | /purchases/** | Authenticated | Register purchases and increase stock |
+| GET/POST/PUT | /sales/** | Authenticated | Register sales and decrease stock |
+
+The full contract is generated at /v3/api-docs and displayed in Swagger UI.
+
+## Example sale
+
+The API ignores client-provided totals and prices. It obtains the product price, validates the store inventory, calculates totals and reduces stock transactionally.
+
+~~~json
+{
+  "store": { "id": 1 },
+  "user": { "id": 1 },
+  "saleDetails": [
+    {
+      "product": { "id": 2 },
+      "quantity": 3
+    }
+  ]
+}
+~~~
+
+## Tests
+
+~~~bash
+./mvnw verify
+~~~
+
+The test profile uses an in-memory H2 database, so tests do not require a local MySQL instance.
+
+## Project structure
+
+~~~text
 src/
-└── main/
-    └── java/
-        └── com.api.manager/
-            ├── controllers/
-            ├── models/
-            ├── repositories/
-            ├── services/
-            ├── security/
-            └── ...
-```
+├── main/java/com/api/manager/
+│   ├── controllers/
+│   ├── dto/
+│   ├── exception/
+│   ├── models/
+│   ├── repositories/
+│   └── services/
+└── test/
+~~~
 
-## 🛡️ Security
+## Important model rule
 
-Security is implemented using **Spring Security**, **BCrypt** and **JWT**.
-
-Passwords are not stored as plain text. They are encrypted using BCrypt before being persisted in the database.
-
-Protected endpoints require a valid JWT token:
-
-```http
-Authorization: Bearer <JWT_TOKEN>
-```
-
-Requests containing invalid, expired or missing tokens are rejected by the security layer.
-
-## 🧪 API Testing
-
-The API can be tested using tools such as:
-
-* Postman
-* Insomnia
-* cURL
-
-Example:
-
-```bash
-curl -X GET http://localhost:8080/category \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-## 📌 Project Status
-
-🚧 **In development**
-
-The project is being developed with the goal of implementing a complete backend solution for inventory and sales management.
-
-Future improvements may include:
-
-* Refresh tokens
-* Email verification
-* Password recovery
-* Role-based endpoint permissions
-* Request rate limiting
-* Auditing and logging
-* Caching
-* Soft delete
-* Docker support
-* Automated testing
-
-## 👨‍💻 Author
-
-**Isaac Monsalve Marin**
-
-Backend / Full Stack Developer
-
-* GitHub: [Monmonsalve](https://github.com/Monmonsalve)
-* LinkedIn: [Isaac Monsalve](https://www.linkedin.com/in/isaacmonsalve/)
+Stock belongs to the combination product + store; therefore, Inventory.quantity is the only stock source. A unique database constraint prevents duplicate inventory rows for the same product and store.

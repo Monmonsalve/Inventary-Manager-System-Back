@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: inventory_manager
+      MYSQL_USER: ${DB_USERNAME:-inventory}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-inventory}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/inventory_manager?createDatabaseIfNotExist=true&serverTimezone=UTC
+      DB_USERNAME: ${DB_USERNAME:-inventory}
+      DB_PASSWORD: ${DB_PASSWORD:-inventory}
+      JWT_SECRET: ${JWT_SECRET:-change-this-development-secret-key-32-chars}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
