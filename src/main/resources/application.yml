@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: inventory-management-api
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/inventory_manager?createDatabaseIfNotExist=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:change-this-development-secret-key-32-chars}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+app:
+  bootstrap-admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
