@@ -1,70 +1,234 @@
-# Inventory Management API
+<div align="center">
+
+# 📦 Inventory Manager System — Backend
+
+### Secure REST API for inventory, purchases and sales management
 
 [![CI](https://github.com/Monmonsalve/Inventary-Manager-System-Back/actions/workflows/ci.yml/badge.svg)](https://github.com/Monmonsalve/Inventary-Manager-System-Back/actions/workflows/ci.yml)
-[![Java](https://img.shields.io/badge/Java-17-ED8B00.svg)](https://openjdk.org/projects/jdk/17/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F.svg)](https://spring.io/projects/spring-boot)
+![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
 
-Secure REST API for managing products, inventory by store, purchases and sales. It uses JWT authentication, role-based authorization and transactional stock updates.
+Built with Java and Spring Boot to demonstrate secure authentication, role-based authorization, transactional business logic, automated tests and containerized deployment.
 
-## Highlights
+[Features](#-features) · [Architecture](#-architecture) · [API](#-main-api-endpoints) · [Quick start](#-quick-start-with-docker) · [Author](#-author)
 
-- JWT authentication with BCrypt password hashing.
-- Role-based access control: user and role administration is restricted to ADMIN.
-- Registration always assigns the USER role on the server.
-- DTOs prevent password hashes from being exposed through the API.
-- Purchases increase stock and sales reduce stock in one database transaction.
-- Stock is stored only in Inventory for each product/store pair.
-- Consistent validation and JSON error responses.
-- OpenAPI/Swagger documentation.
-- Unit tests, Docker Compose and GitHub Actions CI.
+</div>
 
-## Stack
+---
 
-- Java 17
-- Spring Boot, Spring MVC and Spring Data JPA
-- Spring Security and JWT
-- MySQL 8
-- Maven
-- JUnit 5 and Mockito
+## 📋 About the project
+
+**Inventory Manager System** is a backend REST API designed for businesses that need to control products, suppliers, stores, purchases, sales and stock.
+
+Unlike a basic CRUD project, purchase and sale operations contain real transactional logic:
+
+- A **purchase** increases the available inventory in the selected store.
+- A **sale** checks available stock, calculates the total and reduces inventory.
+- If any step fails, the complete operation is rolled back.
+
+This project is especially focused on backend security, data consistency and maintainable API design.
+
+## ✨ Features
+
+| Area | Capabilities |
+|---|---|
+| 🔐 Authentication | Login and registration with JWT |
+| 🛡️ Authorization | Role-based access control with USER and ADMIN |
+| 👤 Users | Safe DTO responses without password hashes |
+| 📦 Products | Product, category and supplier management |
+| 🏪 Stores | Multiple stores with independent inventory |
+| 📊 Inventory | Unique stock record for each product and store |
+| 🛒 Sales | Stock validation, automatic totals and inventory reduction |
+| 🚚 Purchases | Automatic totals and inventory replenishment |
+| ✅ Validation | Jakarta Validation and consistent JSON errors |
+| 📚 Documentation | OpenAPI specification and Swagger UI |
+| 🧪 Quality | JUnit, Mockito, H2 and GitHub Actions CI |
+| 🐳 Deployment | Dockerfile and Docker Compose with MySQL |
+
+## 🚀 Technologies
+
+| Technology | Purpose |
+|---|---|
+| ☕ Java 17 | Programming language |
+| 🌱 Spring Boot | Application framework |
+| 🌐 Spring MVC | REST API layer |
+| 🗄️ Spring Data JPA | Data persistence |
+| 🔄 Hibernate | Object-relational mapping |
+| 🔐 Spring Security | Authentication and authorization |
+| 🎫 JSON Web Token | Stateless authentication |
+| ✅ Jakarta Validation | Request validation |
+| 🐬 MySQL 8 | Production database |
+| 🧪 H2 | In-memory test database |
+| 📖 Springdoc OpenAPI | Swagger documentation |
+| 📦 Maven | Build and dependency management |
+| 🐳 Docker | Reproducible local deployment |
+| ⚙️ GitHub Actions | Continuous integration |
+
+## 🏗️ Architecture
+
+~~~mermaid
+flowchart TB
+    Client[Client or frontend] --> Controller[REST controllers]
+    Controller --> DTO[DTO and validation]
+    DTO --> Service[Business services]
+    Service --> Security[Spring Security and JWT]
+    Service --> Repository[JPA repositories]
+    Repository --> Database[(MySQL)]
+~~~
+
+The project follows a layered architecture:
+
+~~~text
+HTTP request
+    ↓
+Controller
+    ↓
+DTO and validation
+    ↓
+Service and business rules
+    ↓
+Repository
+    ↓
+MySQL
+~~~
+
+## 🔐 Authentication and security
+
+Passwords are hashed with **BCrypt** and are never included in API responses. Authentication is stateless and every protected request must include a valid JWT.
+
+### Authentication flow
+
+~~~mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Security
+    participant Database
+
+    Client->>API: POST /auth/login
+    API->>Database: Find user by email
+    API->>Security: Verify BCrypt password
+    Security-->>Client: Signed JWT
+    Client->>API: Request with Bearer token
+    API->>Security: Validate token and role
+    Security-->>Client: Protected resource
+~~~
+
+### Access rules
+
+| Resource | Public | USER | ADMIN |
+|---|:---:|:---:|:---:|
+| Register and login | ✅ | ✅ | ✅ |
+| Products and categories | ❌ | ✅ | ✅ |
+| Inventory, purchases and sales | ❌ | ✅ | ✅ |
+| User administration | ❌ | ❌ | ✅ |
+| Role administration | ❌ | ❌ | ✅ |
+| Swagger UI | ✅ | ✅ | ✅ |
+
+Public registration always assigns the **USER** role in the backend. A client cannot register itself as an administrator.
+
+## 🗃️ Database model
+
+~~~mermaid
+erDiagram
+    ROLE ||--o{ USER : assigns
+    CATEGORY ||--o{ PRODUCT : groups
+    SUPPLIER ||--o{ PRODUCT : supplies
+    STORE ||--o{ INVENTORY : contains
+    PRODUCT ||--o{ INVENTORY : stocked
+    USER ||--o{ SALE : registers
+    STORE ||--o{ SALE : receives
+    SALE ||--|{ SALE_DETAILS : contains
+    PRODUCT ||--o{ SALE_DETAILS : sold
+    USER ||--o{ PURCHASE : registers
+    STORE ||--o{ PURCHASE : receives
+    SUPPLIER ||--o{ PURCHASE : provides
+    PURCHASE ||--|{ PURCHASE_DETAILS : contains
+    PRODUCT ||--o{ PURCHASE_DETAILS : purchased
+~~~
+
+Stock belongs to the combination **product + store**. A database constraint prevents duplicate inventory rows for the same combination.
+
+## 🌐 Main API endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /auth/register | Public | Register a new USER |
+| POST | /auth/login | Public | Authenticate and obtain a JWT |
+| GET | /products | Authenticated | List products |
+| POST | /products | Authenticated | Create a product |
+| PUT | /products/{id} | Authenticated | Update a product |
+| DELETE | /products/{id} | Authenticated | Delete a product |
+| GET | /inventory | Authenticated | List inventory |
+| POST | /purchases | Authenticated | Register a purchase and increase stock |
+| POST | /sales | Authenticated | Register a sale and reduce stock |
+| GET | /users | ADMIN | List users safely |
+| PUT | /users/{id} | ADMIN | Update a user and role |
+| GET/POST/DELETE | /role/** | ADMIN | Manage roles |
+
+After starting the application, the complete interactive documentation is available at:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON:** http://localhost:8080/v3/api-docs
+
+## ⚡ Quick start with Docker
+
+### Requirements
+
 - Docker
+- Docker Compose
 
-## Run with Docker
-
-1. Copy the environment template:
-
-~~~bash
-cp .env.example .env
-~~~
-
-2. Replace the example passwords and JWT secret in .env. ADMIN_EMAIL and ADMIN_PASSWORD create the initial administrator only when that email does not exist.
-
-3. Start the API and MySQL:
-
-~~~bash
-docker compose up --build
-~~~
-
-The API runs at http://localhost:8080. Swagger UI is available at http://localhost:8080/swagger-ui.html.
-
-## Run locally
-
-Requirements: Java 17 and MySQL 8.
+### 1. Clone the repository
 
 ~~~bash
 git clone https://github.com/Monmonsalve/Inventary-Manager-System-Back.git
 cd Inventary-Manager-System-Back
 ~~~
 
-Configure environment variables:
+### 2. Create the environment file
 
 ~~~bash
-export DB_URL='jdbc:mysql://localhost:3306/inventory_manager?createDatabaseIfNotExist=true&serverTimezone=UTC'
-export DB_USERNAME='root'
-export DB_PASSWORD='your-password'
-export JWT_SECRET='replace-with-a-random-secret-of-at-least-32-characters'
+cp .env.example .env
 ~~~
 
-Then run:
+Replace the example passwords and JWT secret in the new .env file.
+
+### 3. Start the complete environment
+
+~~~bash
+docker compose up --build
+~~~
+
+This starts:
+
+- Spring Boot API on port **8080**
+- MySQL on port **3306**
+- Automatic USER and ADMIN role initialization
+- Optional initial administrator configured through environment variables
+
+## 🖥️ Run locally
+
+### Requirements
+
+- Java 17
+- MySQL 8
+
+Configure these environment variables:
+
+| Variable | Description | Example |
+|---|---|---|
+| DB_URL | JDBC database connection | jdbc:mysql://localhost:3306/inventory_manager |
+| DB_USERNAME | Database user | root |
+| DB_PASSWORD | Database password | your-password |
+| JWT_SECRET | Secret with at least 32 characters | replace-with-a-secure-random-value |
+| JWT_EXPIRATION | Token duration in milliseconds | 86400000 |
+| ADMIN_EMAIL | Optional initial administrator | admin@example.com |
+| ADMIN_PASSWORD | Optional administrator password | strong-password |
+
+Run the application:
 
 ~~~bash
 ./mvnw spring-boot:run
@@ -76,9 +240,9 @@ On Windows:
 ./mvnw.cmd spring-boot:run
 ~~~
 
-## Authentication
+## 🧑‍💻 Usage examples
 
-Register:
+### Register
 
 ~~~http
 POST /auth/register
@@ -94,7 +258,7 @@ Content-Type: application/json
 }
 ~~~
 
-Login:
+### Login
 
 ~~~http
 POST /auth/login
@@ -108,30 +272,15 @@ Content-Type: application/json
 }
 ~~~
 
-Use the returned token on protected requests:
+Use the returned token:
 
 ~~~http
-Authorization: Bearer <token>
+Authorization: Bearer <your-jwt-token>
 ~~~
 
-## Main endpoints
+### Register a sale
 
-| Method | Endpoint | Access | Purpose |
-|---|---|---|---|
-| POST | /auth/register | Public | Register a user with role USER |
-| POST | /auth/login | Public | Obtain a JWT |
-| GET/PUT/DELETE | /users/** | ADMIN | Manage users |
-| GET/POST/DELETE | /role/** | ADMIN | Manage roles |
-| GET/POST/PUT/DELETE | /products/** | Authenticated | Manage products |
-| GET/POST/PUT/DELETE | /inventory/** | Authenticated | Manage stock by store |
-| GET/POST/PUT | /purchases/** | Authenticated | Register purchases and increase stock |
-| GET/POST/PUT | /sales/** | Authenticated | Register sales and decrease stock |
-
-The full contract is generated at /v3/api-docs and displayed in Swagger UI.
-
-## Example sale
-
-The API ignores client-provided totals and prices. It obtains the product price, validates the store inventory, calculates totals and reduces stock transactionally.
+The API obtains the official product price, verifies the selected store inventory and calculates the total automatically.
 
 ~~~json
 {
@@ -146,28 +295,75 @@ The API ignores client-provided totals and prices. It obtains the product price,
 }
 ~~~
 
-## Tests
+## 🧪 Testing and continuous integration
+
+Run all tests:
 
 ~~~bash
 ./mvnw verify
 ~~~
 
-The test profile uses an in-memory H2 database, so tests do not require a local MySQL instance.
+The test environment uses H2, so it does not require a local MySQL installation.
 
-## Project structure
+Every push and pull request is automatically validated by GitHub Actions:
+
+- Project compilation
+- Application context startup
+- Authentication service tests
+- User registration and role assignment tests
+- Transactional sales and inventory tests
+
+## 📁 Project structure
 
 ~~~text
-src/
-├── main/java/com/api/manager/
-│   ├── controllers/
-│   ├── dto/
-│   ├── exception/
-│   ├── models/
-│   ├── repositories/
-│   └── services/
-└── test/
+.
+├── .github/workflows/     # Continuous integration
+├── src/
+│   ├── main/
+│   │   ├── java/com/api/manager/
+│   │   │   ├── controllers/
+│   │   │   ├── dto/
+│   │   │   ├── exception/
+│   │   │   ├── models/
+│   │   │   ├── repositories/
+│   │   │   └── services/
+│   │   └── resources/
+│   └── test/              # Unit and context tests
+├── Dockerfile
+├── docker-compose.yml
+├── pom.xml
+└── README.md
 ~~~
 
-## Important model rule
+## 🗺️ Roadmap
 
-Stock belongs to the combination product + store; therefore, Inventory.quantity is the only stock source. A unique database constraint prevents duplicate inventory rows for the same product and store.
+- [x] JWT authentication
+- [x] Role-based authorization
+- [x] Transactional inventory updates
+- [x] Request validation and error handling
+- [x] Swagger/OpenAPI documentation
+- [x] Docker Compose environment
+- [x] Automated tests and CI
+- [ ] Refresh tokens
+- [ ] Email verification
+- [ ] Password recovery
+- [ ] Audit logs
+- [ ] Pagination and filtering
+- [ ] Rate limiting
+- [ ] Cloud deployment and public demo
+
+## 👨‍💻 Author
+
+**Isaac Monsalve Marin**<br>
+Backend / Full Stack Developer — Santiago, Chile
+
+- GitHub: [Monmonsalve](https://github.com/Monmonsalve)
+- LinkedIn: [Isaac Monsalve](https://www.linkedin.com/in/isaacmonsalve/)
+
+---
+
+<div align="center">
+
+If this project helped you or you found it interesting, consider giving it a ⭐.
+
+</div>
